@@ -8,6 +8,6 @@ export function createParkingSpot(payload: { houseId: number; number: string; lo
     return api.post('/parking', payload);
 }
 
-export function fetchParkingByHouseId(id: string) {
+export function fetchParkingByHouseId(id: any) {
     return api.get(`/parking/${id}`);
 }

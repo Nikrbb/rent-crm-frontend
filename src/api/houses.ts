@@ -8,6 +8,6 @@ export function getHouses() {
     return api.get('/houses');
 }
 
-export function getHouseById(id: string) {
+export function getHouseById(id: any) {
     return api.get(`/houses/${id}`, { headers: { 'X-Request-Name': 'get-house' } });
 }
