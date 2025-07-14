@@ -15,36 +15,36 @@ const routes = [
         path: '/',
         name: 'home',
         component: HomeView,
-        meta: { requiresAuth: true, breadcrumb: 'Home' },
+        meta: { requiresAuth: true },
     },
     {
         path: '/create',
         name: 'create',
         component: CreateView,
-        meta: { requiresAuth: true, breadcrumb: 'Create' },
+        meta: { requiresAuth: true },
     },
     {
         path: '/house/:id',
         name: 'house',
-        meta: { requiresAuth: true, breadcrumb: 'House' },
+        meta: { requiresAuth: true },
         component: () => import('../views/HouseView.vue'),
     },
     {
         path: '/parking/:id',
         name: 'parking',
-        meta: { requiresAuth: true, breadcrumb: 'Parking' },
+        meta: { requiresAuth: true },
         component: () => import('../views/ParkingView.vue'),
     },
     {
         path: '/parking/reservations/:id',
         name: 'reservationsById',
-        meta: { requiresAuth: true, breadcrumb: 'Reservation' },
+        meta: { requiresAuth: true },
         component: () => import('../views/ReservationsView.vue'),
     },
     {
         path: '/reservations/',
         name: 'reservations',
-        meta: { requiresAuth: true, breadcrumb: 'Reservations' },
+        meta: { requiresAuth: true },
         component: () => import('../views/ReservationsView.vue'),
     },
 ];
@@ -55,6 +55,13 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
+    const authStore = useAuthStore();
+    if (to.meta.requiresAuth && !authStore.token) {
+        return next('/login');
+    }
+    if (to.path === '/login' && authStore.token) {
+        return next('/');
+    }
     const navigationStore = useNavigationStore();
 
     if (typeof from.name === 'string') {
@@ -65,14 +72,6 @@ router.beforeEach((to, from, next) => {
         });
     }
     next();
-
-    const authStore = useAuthStore();
-    if (to.meta.requiresAuth && !authStore.token) {
-        return '/login';
-    }
-    if (to.path === '/login' && authStore.token) {
-        return '/';
-    }
 });
 
 export default router;

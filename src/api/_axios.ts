@@ -6,8 +6,7 @@ import { keysToCamelCase } from '@/utilities/toCamelCase';
 import router from '../router';
 
 const api = axios.create({
-    baseURL: 'https://rent-crm-backend-stage.up.railway.app',
-    // baseURL: 'https://rent-crm-backend-production.up.railway.app',
+    baseURL: import.meta.env.VITE_API_BASE_URL,
     // withCredentials: true,
     timeout: 5000,
     transformResponse: [

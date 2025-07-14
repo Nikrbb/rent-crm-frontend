@@ -54,11 +54,10 @@ onMounted(async () => {
     <div class="house">
         <i class="pi pi-history reservations-list" @click="router.push('/reservations')" style="font-size: 1.2rem"></i>
         <img v-if="house?.photo_url" :src="house?.photo_url" alt="" />
-        <!-- Add house details here -->
 
         <h2 class="text-xl font-semibold text-center mt-10">{{ house?.name }}</h2>
         <p class="text-sm font-mono font-semibold text-center mb-10">{{ house?.address }}</p>
-        <DataTable :value="parkingSpaces">
+        <DataTable size="small" :value="parkingSpaces">
             <Column field="number" header="#P" />
             <Column field="status" header="Статус">
                 <template #body="slotProps">
