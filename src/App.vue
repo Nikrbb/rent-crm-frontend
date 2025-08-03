@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router';
 import ErrorPopup from '@/components/ErrorPopup.vue';
-import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import Breadcrumbs from './components/Breadcrumbs.vue';
 </script>
 
 <template>
     <main class="main">
         <Breadcrumbs />
         <RouterView />
-        <ErrorPopup />
     </main>
 </template>
 

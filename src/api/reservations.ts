@@ -15,6 +15,10 @@ export function fetchAllReservations() {
     return api.get('/reservations');
 }
 
+export function fetchReservationsByHouse(houseId: string) {
+    return api.get(`/reservations/house/${houseId}`);
+}
+
 export function createReservation(payload: ReservationPayload) {
     return api.post('/reservations', payload);
 }

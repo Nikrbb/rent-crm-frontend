@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { deleteReservation, fetchAllReservations } from '@/api/reservations';
+import { useLoadingStore } from '@/stores/loading';
+import { deleteReservation, fetchAllReservations, fetchReservationsByHouse } from '@/api/reservations';
 import { ref, onMounted } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import type { Reservation } from '@/interfaces/Reservation';
+import { useRoute } from 'vue-router';
 
+const route = useRoute();
 const confirm = useConfirm();
 const toast = useToast();
 
@@ -40,8 +43,20 @@ const confirm1 = (reservation: { data: Reservation }) => {
     });
 };
 
+const loadingStore = useLoadingStore();
+loadingStore.stopLoading();
+
 onMounted(async () => {
-    const { data } = await fetchAllReservations();
+    let data = [];
+    const houseId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
+
+    if (houseId) {
+        const response = await fetchReservationsByHouse(houseId);
+        data = response.data;
+    } else {
+        const response = await fetchAllReservations();
+        data = response.data;
+    }
 
     reservations.value = data;
 });
@@ -51,7 +66,7 @@ onMounted(async () => {
     <Toast />
     <ConfirmDialog></ConfirmDialog>
     <div class="reservations">
-        <DataTable :value="reservations">
+        <DataTable :value="reservations" size="small">
             <Column field="spotNumber" header="#P" />
             <Column field="startDate" header="Заезд">
                 <template #body="slotProps">

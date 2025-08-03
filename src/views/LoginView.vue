@@ -16,7 +16,7 @@ watch(
     () => authStore.token,
     (newValue) => {
         if (newValue) {
-            router.push('/');
+            router.push('/houses');
         }
     },
 );
@@ -82,22 +82,22 @@ const onSubmit = async () => {
 </template>
 
 <style scoped lang="scss">
-@media screen and (max-width: 430px) {
-    .login {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .title {
-        position: relative;
-        bottom: 200px;
-    }
+.login {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
+
+.title {
+    position: relative;
+    bottom: 200px;
+}
+// @media screen and (max-width: 430px) {
+// }
 </style>

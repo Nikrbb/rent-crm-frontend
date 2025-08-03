@@ -1,6 +1,6 @@
 <!-- src/components/Breadcrumbs.vue -->
 <template>
-    <Breadcrumb :model="breadcrumbItems" :home="homeItem" />
+    <Breadcrumb :home="homeItem" />
 </template>
 
 <script setup lang="ts">
@@ -14,7 +14,7 @@ const navigationStore = useNavigationStore();
 
 const homeItem = {
     icon: 'pi pi-home',
-    command: () => router.push('/'),
+    command: () => router.push('/houses'),
 };
 
 interface BreadcrumbItem {

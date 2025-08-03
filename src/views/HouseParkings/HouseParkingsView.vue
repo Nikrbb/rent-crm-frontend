@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useHouseStore } from '@/stores/houses';
 import { fetchParkingByHouseId } from '@/api/parking';
@@ -9,14 +9,17 @@ import { ReservationStatus } from '@/interfaces/ReservationStatusEnum';
 import type { House } from '@/interfaces/House';
 import type { Parking } from '@/interfaces/Parking';
 import { toUTCMidnight } from '@/utilities/toUTCMidnight';
+import { sortParkingList, type SortState } from './utils/sortFunction';
 
 const route = useRoute();
 const router = useRouter();
 const housesStore = useHouseStore();
+
 const house = ref(housesStore.houses.find((h: House) => h.id === route.params.id));
+const payload = ref({ houseId: '', spotId: '', startDate: new Date(), endDate: null });
 const parkingSpaces = ref<Parking[]>([]);
 const chosenSpace = ref<Parking | null>(null);
-const payload = ref({ houseId: '', spotId: '', startDate: new Date(), endDate: null });
+const sorted = ref<SortState>({ byNumber: '', byStatus: '', byDate: '' });
 
 const postNewReservation = async () => {
     const startDate = toUTCMidnight(payload.value.startDate);
@@ -48,18 +51,40 @@ onMounted(async () => {
     const { data }: { data: Parking[] } = await fetchParkingByHouseId(route.params.id);
     parkingSpaces.value = data;
 });
+
+function toggleSort(field: keyof SortState) {
+    sorted.value[field] = sorted.value[field] === 'asc' ? 'desc' : sorted.value[field] === 'desc' ? '' : 'asc';
+}
+
+const sortedList = computed(() => sortParkingList(parkingSpaces.value, sorted.value));
 </script>
 
 <template>
-    <div class="house">
-        <i class="pi pi-history reservations-list" @click="router.push('/reservations')" style="font-size: 1.2rem"></i>
-        <img v-if="house?.photo_url" :src="house?.photo_url" alt="" />
+    <div class="house mt-3">
+        <i
+            class="pi pi-history reservations-list"
+            @click="router.push({ name: 'house-parking-reservations', params: { id: route.params.id } })"
+            style="font-size: 1.2rem"
+        ></i>
+        <div class="grid grid-cols-2 grid-rows-2">
+            <img class="row-span-2 rounded-md" v-if="house?.photoUrl" :src="house?.photoUrl" alt="house" />
 
-        <h2 class="text-xl font-semibold text-center mt-10">{{ house?.name }}</h2>
-        <p class="text-sm font-mono font-semibold text-center mb-10">{{ house?.address }}</p>
-        <DataTable size="small" :value="parkingSpaces">
-            <Column field="number" header="#P" />
-            <Column field="status" header="Статус">
+            <h2 class="text-xl font-semibold text-center mt-10">{{ house?.name }}</h2>
+            <p class="italic text-sm font-mono font-semibold text-center mb-10">{{ house?.address }}</p>
+        </div>
+        <DataTable size="small" :value="sortedList">
+            <Column field="number">
+                <template #header="slotProps">
+                    #P
+                    <span>{{ sorted.byNumber === 'asc' ? '▲' : sorted.byNumber === 'desc' ? '▼' : '' }}</span>
+                </template>
+            </Column>
+
+            <Column field="status">
+                <template #header="slotProps">
+                    Статус
+                    <span>{{ sorted.byNumber === 'asc' ? '▲' : sorted.byNumber === 'desc' ? '▼' : '' }}</span>
+                </template>
                 <template #body="slotProps">
                     <div v-if="slotProps.data.status === ReservationStatus.free" class="flex gap-1 items-center">
                         <span class="pi pi-circle-fill text-lime-500" />
