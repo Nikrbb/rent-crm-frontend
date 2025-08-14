@@ -13,6 +13,21 @@ const toast = useToast();
 
 const reservations = ref([]);
 
+const loadReservationsHistory = async () => {
+    let data = [];
+    const houseId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
+
+    if (houseId) {
+        const response = await fetchReservationsByHouse(houseId);
+        data = response.data;
+    } else {
+        const response = await fetchAllReservations();
+        data = response.data;
+    }
+
+    reservations.value = data;
+};
+
 const confirm1 = (reservation: { data: Reservation }) => {
     confirm.require({
         message: 'Уверены что хотите удалить бронирывание?',
@@ -30,8 +45,8 @@ const confirm1 = (reservation: { data: Reservation }) => {
         },
         accept: async () => {
             try {
-                const result = await deleteReservation(reservation.data.id);
-                reservations.value = result.data.reservations;
+                await deleteReservation(reservation.data.id);
+                loadReservationsHistory();
                 toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Бронь удалена', life: 3000 });
             } catch (error) {
                 throw new Error(error instanceof Error ? error.message : String(error));
@@ -46,20 +61,7 @@ const confirm1 = (reservation: { data: Reservation }) => {
 const loadingStore = useLoadingStore();
 loadingStore.stopLoading();
 
-onMounted(async () => {
-    let data = [];
-    const houseId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
-
-    if (houseId) {
-        const response = await fetchReservationsByHouse(houseId);
-        data = response.data;
-    } else {
-        const response = await fetchAllReservations();
-        data = response.data;
-    }
-
-    reservations.value = data;
-});
+onMounted(() => loadReservationsHistory());
 </script>
 
 <template>

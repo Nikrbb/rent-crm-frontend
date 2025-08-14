@@ -1,46 +1,46 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useHouseStore } from '@/stores/houses';
 import { fetchParkingByHouseId } from '@/api/parking';
 import { getHouseById } from '@/api/houses';
-import { createReservation } from '@/api/reservations';
+
 import { ReservationStatus } from '@/interfaces/ReservationStatusEnum';
 import type { House } from '@/interfaces/House';
 import type { Parking } from '@/interfaces/Parking';
-import { toUTCMidnight } from '@/utilities/toUTCMidnight';
+
 import { sortParkingList, type SortState } from './utils/sortFunction';
+import NewReservation from './components/NewReservation.vue';
+import type { Reservation } from '@/interfaces/Reservation';
 
 const route = useRoute();
 const router = useRouter();
 const housesStore = useHouseStore();
 
 const house = ref(housesStore.houses.find((h: House) => h.id === route.params.id));
-const payload = ref({ houseId: '', spotId: '', startDate: new Date(), endDate: null });
+
+const apartments = ref([]);
 const parkingSpaces = ref<Parking[]>([]);
 const chosenSpace = ref<Parking | null>(null);
 const sorted = ref<SortState>({ byNumber: '', byStatus: '', byDate: '' });
 
-const postNewReservation = async () => {
-    const startDate = toUTCMidnight(payload.value.startDate);
-    const endDate = toUTCMidnight(payload.value.endDate);
+const fetchParkingSpaces = async () => {
+    const { data }: { data: Parking[] } = await fetchParkingByHouseId(route.params.id);
+    parkingSpaces.value = data;
+};
 
-    if (chosenSpace.value) {
-        try {
-            await createReservation({
-                ...payload.value,
-                houseId: chosenSpace.value.houseId,
-                spotId: chosenSpace.value.id,
-                startDate,
-                endDate,
-            });
-            const { data }: { data: Parking[] } = await fetchParkingByHouseId(route.params.id);
-            parkingSpaces.value = data;
-        } finally {
-            payload.value = { houseId: '', spotId: '', startDate: new Date(), endDate: null };
-            chosenSpace.value = null;
-        }
-    }
+const correctEndDate = (reservations: Reservation[]) => {
+    const result = reservations.reduce(
+        (acc, curr) => {
+            if (acc[0] === '') return [curr.endDate, false];
+            if (acc[1]) return acc;
+            if (acc[0] === curr.startDate) return [curr.endDate, false];
+            if (acc[0] !== curr.startDate) return [acc[0], true];
+        },
+        ['', false],
+    );
+
+    return result[0];
 };
 
 onMounted(async () => {
@@ -48,8 +48,7 @@ onMounted(async () => {
         const { data } = await getHouseById(route.params.id);
         house.value = data;
     }
-    const { data }: { data: Parking[] } = await fetchParkingByHouseId(route.params.id);
-    parkingSpaces.value = data;
+    fetchParkingSpaces();
 });
 
 function toggleSort(field: keyof SortState) {
@@ -124,7 +123,7 @@ const sortedList = computed(() => sortParkingList(parkingSpaces.value, sorted.va
                             date-format="dd.mm"
                             size="small"
                             :showTime="false"
-                            :default-value="slotProps.data.reservations[0]?.endDate"
+                            :default-value="correctEndDate(slotProps.data.reservations)"
                         />
                     </div>
                 </template>
@@ -145,40 +144,7 @@ const sortedList = computed(() => sortParkingList(parkingSpaces.value, sorted.va
         </DataTable>
     </div>
 
-    <Dialog
-        modal
-        header="Edit Profile"
-        :style="{ width: '25rem' }"
-        position="right"
-        :visible="Boolean(chosenSpace)"
-        v-on:update:visible="chosenSpace = null"
-    >
-        <template #header>
-            <div class="inline-flex items-center justify-center gap-2">
-                <Avatar image="https://imgpng.ru/d/parking_PNG59.png" shape="circle" />
-                <span class="font-bold whitespace-nowrap">{{ chosenSpace?.number }}</span>
-            </div>
-        </template>
-
-        <span class="text-surface-500 dark:text-surface-400 block mb-8">Добавить бронирование</span>
-        <div class="flex items-center gap-4 mb-4">
-            <label for="username" class="font-semibold w-24">Apt</label>
-            <Select class="w-full"></Select>
-        </div>
-        <div class="flex items-center gap-4 mb-4">
-            <label for="username" class="font-semibold w-24">Start</label>
-            <DatePicker v-model="payload.startDate" class="w-full" name="date" dateFormat="dd.mm.yy" fluid />
-        </div>
-        <div class="flex items-center gap-4 mb-2">
-            <label for="email" class="font-semibold w-24">End</label>
-            <DatePicker v-model="payload.endDate" class="w-full" name="date" dateFormat="dd.mm.yy" fluid />
-        </div>
-
-        <template #footer>
-            <Button label="Cancel" text severity="secondary" @click="chosenSpace = null" autofocus />
-            <Button label="Save" outlined severity="secondary" @click="postNewReservation" autofocus />
-        </template>
-    </Dialog>
+    <NewReservation v-model:chosenSpace="chosenSpace" :updateParking="fetchParkingSpaces"></NewReservation>
 </template>
 
 <style lang="scss">
