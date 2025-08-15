@@ -29,15 +29,16 @@ const fetchParkingSpaces = async () => {
     parkingSpaces.value = data;
 };
 
-const correctEndDate = (reservations: Reservation[]) => {
-    const result = reservations.reduce(
-        (acc, curr) => {
-            if (acc[0] === '') return [curr.endDate, false];
+const correctEndDate = (reservations: Reservation[]): Date | null => {
+    const result = reservations.reduce<[Date | null, boolean]>(
+        (acc, curr): [Date | null, boolean] => {
+            if (acc[0] === null) return [curr.endDate, false];
             if (acc[1]) return acc;
             if (acc[0] === curr.startDate) return [curr.endDate, false];
             if (acc[0] !== curr.startDate) return [acc[0], true];
+            return acc;
         },
-        ['', false],
+        [null, false],
     );
 
     return result[0];

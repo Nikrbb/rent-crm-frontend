@@ -4,8 +4,8 @@ export interface Reservation {
     houseId: string;
     apartmentId?: string;
     userId: string | null;
-    startDate: string;
-    endDate: string;
+    startDate: Date;
+    endDate: Date;
     phoneInfo: null;
     carInfo: null;
     notes?: string;
